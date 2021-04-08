@@ -10,6 +10,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 public class TestController {
@@ -45,7 +47,7 @@ public class TestController {
     private void initialize() {
         colorQueue = FXCollections.observableArrayList();
         setCanvasColor(Color.WHITE);
-//        initializeSerial();
+//        new Thread(this::initializeSerial).start();
     }
 
     private void initializeSerial() {
@@ -70,11 +72,31 @@ public class TestController {
         scorePlayer.setText(String.valueOf(colorQueue.size()));
     }
 
-    private void sendMessage(Color color) {
+    private void setColor(Color color) {
         Platform.runLater(() -> {
             setCanvasColor(color);
             scorePlayer.setText(String.valueOf(colorQueue.size()));
         });
+    }
+
+    private void sendMessage(Color color) {
+        int red = (int) color.getRed();
+        int green = (int) color.getGreen();
+        int blue = (int) color.getBlue();
+        byte[] message = (red + "," + green + "," + blue).getBytes(StandardCharsets.US_ASCII);
+
+        while(main.waiting){
+            try{
+                wait();
+            } catch(InterruptedException ignored){}
+        }
+
+        try {
+            main.output.write(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        main.waiting = true;
     }
 
     @FXML
@@ -82,33 +104,33 @@ public class TestController {
         new Thread(() -> {
             while (!colorQueue.isEmpty()) {
                 Color color = colorQueue.remove(0);
-                sendMessage(color);
+                setColor(color);
+
+                // placeholder
                 try {
                     TimeUnit.MILLISECONDS.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
-        }).start();
+                // /placeholder
 
-//        new Thread() {
-//            public void run() {
-//                while (true){
-//                    while(main.waiting){
-//                        try{
-//                            wait();
-//                        } catch(InterruptedException ignored){}
-//                    }
-//
-//                    try {
-//                        main.output.write("Hello".getBytes());
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    main.waiting = true;
-//                }
-//            }
-//        }.start();
+//                sendMessage(color);
+            }
+
+            // end tests
+            while(main.waiting){
+                try{
+                    wait();
+                } catch(InterruptedException ignored){}
+            }
+
+            try {
+                main.output.write((byte) 126);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }).start();
     }
 
     private void setCanvasColor (Color color) {

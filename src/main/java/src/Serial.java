@@ -1,20 +1,22 @@
 package src;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
 
 
 public class Serial implements SerialPortEventListener {
     SerialPort serialPort;
-    public List<String> messages = new LinkedList<>();
+    public String results = "";
     public boolean waiting = false;
 
     private static final String[] PORT_NAMES = {
@@ -27,7 +29,7 @@ public class Serial implements SerialPortEventListener {
     private BufferedReader input;
     public OutputStream output;
     private static final int TIME_OUT = 2000;
-    private static final int DATA_RATE = 9600;
+    private static final int DATA_RATE = 115200;
 
     public void initialize() {
         System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
@@ -66,6 +68,15 @@ public class Serial implements SerialPortEventListener {
         } catch (Exception e) {
             System.err.println(e.toString());
         }
+
+        // initial message
+
+        try {
+            output.write((byte) 127);  // TODO specification
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.waiting = true;
     }
 
     public synchronized void close() {
@@ -78,8 +89,13 @@ public class Serial implements SerialPortEventListener {
     public synchronized void serialEvent(SerialPortEvent oEvent) {
         if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
             try {
-                String inputLine=input.readLine();
-                messages.add(inputLine);
+                String inputLine = input.readLine();
+                if(Arrays.equals(inputLine.getBytes(StandardCharsets.US_ASCII), new byte[]{127})){
+                    this.waiting = false;
+                }
+                else {
+                    this.results = input.readLine();
+                }
             } catch (Exception e) {
                 System.err.println(e.toString());
             }
