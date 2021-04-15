@@ -68,11 +68,14 @@ public class Serial implements SerialPortEventListener {
         } catch (Exception e) {
             System.err.println(e.toString());
         }
+    }
 
+    public synchronized void sendInitialMessage(int length) {
         // initial message
 
         try {
-            output.write((byte) 127);  // TODO specification
+            output.write((byte) 't');
+            output.write(Integer.toString(length).getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
             e.printStackTrace();
         }

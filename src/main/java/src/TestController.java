@@ -47,7 +47,7 @@ public class TestController {
     private void initialize() {
         colorQueue = FXCollections.observableArrayList();
         setCanvasColor(Color.WHITE);
-//        new Thread(this::initializeSerial).start();
+        new Thread(this::initializeSerial).start();
     }
 
     private void initializeSerial() {
@@ -83,7 +83,7 @@ public class TestController {
         int red = (int) color.getRed();
         int green = (int) color.getGreen();
         int blue = (int) color.getBlue();
-        byte[] message = (red + "," + green + "," + blue).getBytes(StandardCharsets.US_ASCII);
+        byte[] message = (Integer.toString(red) + Integer.toString(green) + Integer.toString(blue)).getBytes(StandardCharsets.US_ASCII);
 
         while(main.waiting){
             try{
@@ -102,33 +102,23 @@ public class TestController {
     @FXML
     private void handleExecuteAction() {
         new Thread(() -> {
+            main.sendInitialMessage(colorQueue.size());
+
             while (!colorQueue.isEmpty()) {
                 Color color = colorQueue.remove(0);
                 setColor(color);
 
-                // placeholder
-                try {
-                    TimeUnit.MILLISECONDS.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                // /placeholder
+                //                    TimeUnit.MILLISECONDS.sleep(1000);
+                sendMessage(color);
 
-//                sendMessage(color);
             }
 
             // end tests
-            while(main.waiting){
-                try{
-                    wait();
-                } catch(InterruptedException ignored){}
-            }
-
-            try {
-                main.output.write((byte) 126);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            while(main.waiting){
+//                try{
+//                    wait();
+//                } catch(InterruptedException ignored){}
+//            }
 
         }).start();
     }
