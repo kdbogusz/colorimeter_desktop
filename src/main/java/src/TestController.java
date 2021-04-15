@@ -51,7 +51,7 @@ public class TestController {
     }
 
     private void initializeSerial() {
-        Serial main = new Serial();
+        main = new Serial();
         main.initialize();
     }
 
@@ -80,23 +80,20 @@ public class TestController {
     }
 
     private void sendMessage(Color color) {
-        int red = (int) color.getRed();
-        int green = (int) color.getGreen();
-        int blue = (int) color.getBlue();
-        byte[] message = (Integer.toString(red) + Integer.toString(green) + Integer.toString(blue)).getBytes(StandardCharsets.US_ASCII);
+        byte red = (byte) color.getRed();
+        byte green = (byte) color.getGreen();
+        byte blue = (byte) color.getBlue();
+        byte[] message = {red, green, blue};
 
-        while(main.waiting){
-            try{
-                wait();
-            } catch(InterruptedException ignored){}
-        }
+        main.goToSleep();
 
         try {
             main.output.write(message);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        main.waiting = true;
+
+        main.makeBed();
     }
 
     @FXML
@@ -108,9 +105,7 @@ public class TestController {
                 Color color = colorQueue.remove(0);
                 setColor(color);
 
-                //                    TimeUnit.MILLISECONDS.sleep(1000);
                 sendMessage(color);
-
             }
 
             // end tests

@@ -32,7 +32,7 @@ public class Serial implements SerialPortEventListener {
     private static final int DATA_RATE = 115200;
 
     public void initialize() {
-        System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
+        System.setProperty("gnu.io.rxtx.SerialPorts", "COM3");
 
         CommPortIdentifier portId = null;
         Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
@@ -74,8 +74,8 @@ public class Serial implements SerialPortEventListener {
         // initial message
 
         try {
-            output.write((byte) 't');
-            output.write(Integer.toString(length).getBytes(StandardCharsets.US_ASCII));
+            output.write(new byte[]{116});
+            output.write(new byte[]{(byte) length});
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -93,15 +93,32 @@ public class Serial implements SerialPortEventListener {
         if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
             try {
                 String inputLine = input.readLine();
+                System.out.println(inputLine);
                 if(Arrays.equals(inputLine.getBytes(StandardCharsets.US_ASCII), new byte[]{127})){
-                    this.waiting = false;
-                }
-                else {
-                    this.results = input.readLine();
+                    this.wakeUp();
                 }
             } catch (Exception e) {
                 System.err.println(e.toString());
             }
         }
+    }
+
+    public synchronized void goToSleep() {
+        try {
+            while (this.waiting) {
+                this.wait();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized void wakeUp() {
+        this.waiting = false;
+        this.notifyAll();
+    }
+
+    public synchronized void makeBed() {
+        this.waiting = true;
     }
 }
