@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 
 
-public class Serial implements SerialPortEventListener {
+public class SerialRXTX implements SerialPortEventListener {
     SerialPort serialPort;
     public String results = "";
     public boolean waiting = false;

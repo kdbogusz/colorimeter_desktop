@@ -11,8 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 public class TestController {
     @FXML
@@ -37,7 +35,8 @@ public class TestController {
     @FXML
     private Label scorePlayer;
 
-    private Serial main;
+//    private SerialRXTX main;
+    private SerialJSC main;
 
     public void setAppController(AppController appController) {
         this.appController = appController;
@@ -51,7 +50,8 @@ public class TestController {
     }
 
     private void initializeSerial() {
-        main = new Serial();
+//        main = new SerialRXTX();
+        main = new SerialJSC();
         main.initialize();
     }
 
@@ -85,15 +85,16 @@ public class TestController {
         byte blue = (byte) color.getBlue();
         byte[] message = {red, green, blue};
 
-        main.goToSleep();
-
-        try {
-            main.output.write(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        main.makeBed();
+        main.sendMessage(message);
+//        main.goToSleep();
+//
+//        try {
+//            main.output.write(message);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        main.makeBed();
     }
 
     @FXML
